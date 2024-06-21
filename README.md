@@ -15,7 +15,7 @@ Add this dependency in the `build.zig.zon`:
 Then in the `build.zig` add:
 ```zig
 const aecs = b.dependency("arion_ecs", .{});
-exe.root_module.addImport("aecs", amth.module("root"));
+exe.root_module.addImport("aecs", aecs.module("root"));
 ```
 Now, in your code, you can use:
 ```zig
