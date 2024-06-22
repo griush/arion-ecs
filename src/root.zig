@@ -346,7 +346,6 @@ pub const Registry = struct {
             .archetype_index = @intCast(archetype_entry.index),
             .row_index = new_row,
         });
-        return;
     }
 
     pub fn initErasedStorage(self: *const Self, total_rows: *usize, comptime Component: type) !ErasedComponentStorage {
