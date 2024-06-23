@@ -5,7 +5,7 @@ pub const Entity = u64;
 
 const void_archetype_hash = std.math.maxInt(u64);
 
-pub fn ComponentStorage(comptime Component: type) type {
+fn ComponentStorage(comptime Component: type) type {
     return struct {
         /// A reference to the total number of entities with the same type as is being stored here.
         total_rows: *usize,
@@ -40,7 +40,7 @@ pub fn ComponentStorage(comptime Component: type) type {
     };
 }
 
-pub const ErasedComponentStorage = struct {
+const ErasedComponentStorage = struct {
     ptr: *anyopaque,
 
     deinit: *const fn (erased: *anyopaque, allocator: std.mem.Allocator) void,
@@ -54,7 +54,7 @@ pub const ErasedComponentStorage = struct {
     }
 };
 
-pub const ArchetypeStorage = struct {
+const ArchetypeStorage = struct {
     allocator: std.mem.Allocator,
 
     hash: u64,
@@ -107,7 +107,7 @@ pub const ArchetypeStorage = struct {
 pub const Registry = struct {
     const Self = @This();
 
-    pub const Pointer = struct {
+    const Pointer = struct {
         archetype_index: u16,
         row_index: u32,
     };
@@ -163,7 +163,7 @@ pub const Registry = struct {
         return new_id;
     }
 
-    pub inline fn archetypeByID(self: *Self, entity: Entity) *ArchetypeStorage {
+    inline fn archetypeByID(self: *Self, entity: Entity) *ArchetypeStorage {
         const ptr = self.entities.get(entity).?;
         return &self.archetypes.values()[ptr.archetype_index];
     }
@@ -239,7 +239,7 @@ pub const Registry = struct {
         while (column_iter.next()) |entry| {
             const old_component_storage = entry.value_ptr;
             var new_component_storage = current_archetype_storage.components.get(entry.key_ptr.*).?;
-            new_component_storage.copy(new_component_storage.ptr, self.allocator, new_row, old_ptr.row_index, old_component_storage.ptr) catch |err| {
+            new_component_storage.copy(new_component_storage.ptr, self.allocator, old_ptr.row_index, new_row, old_component_storage.ptr) catch |err| {
                 current_archetype_storage.undoNew();
                 return err;
             };
@@ -328,7 +328,7 @@ pub const Registry = struct {
         while (column_iter.next()) |entry| {
             const src_component_storage = archetype.components.get(entry.key_ptr.*).?;
             var dst_component_storage = entry.value_ptr;
-            dst_component_storage.copy(dst_component_storage.ptr, self.allocator, new_row, old_ptr.row_index, src_component_storage.ptr) catch |err| {
+            dst_component_storage.copy(dst_component_storage.ptr, self.allocator, old_ptr.row_index, new_row, src_component_storage.ptr) catch |err| {
                 current_archetype_storage.undoNew();
                 return err;
             };
@@ -348,7 +348,7 @@ pub const Registry = struct {
         });
     }
 
-    pub fn initErasedStorage(self: *const Self, total_rows: *usize, comptime Component: type) !ErasedComponentStorage {
+    fn initErasedStorage(self: *const Self, total_rows: *usize, comptime Component: type) !ErasedComponentStorage {
         const new_ptr = try self.allocator.create(ComponentStorage(Component));
         new_ptr.* = ComponentStorage(Component){ .total_rows = total_rows };
 
